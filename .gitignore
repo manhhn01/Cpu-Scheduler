@@ -1,0 +1,7 @@
+.vscode/
+debug/
+release/
+releases/
+[Bb]in/
+[Ll]og/
+[Ll]ogs/
