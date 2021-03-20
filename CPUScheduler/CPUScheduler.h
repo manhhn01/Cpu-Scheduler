@@ -12,7 +12,7 @@
 #include "list.h"
 #include "queue.h"
 
-Process idleP = {L"Idle", 0, 0, 0, 0, -1};
+Process idleP = {L"Idle", 0, 0, 0, 0, -1}; //remaining time = -1
 
 List FCFS(Process *processes, int n)
 {
@@ -113,7 +113,7 @@ List SJF(Process *processes, int n)
     sortArrivalTime(processes, n);
     for (int count = 0; count < n; count++)
     {
-        if ((i = findMinBurst(processes, n, cTime)) == -1)
+        if ((i = findMinBurst(processes, n, cTime)) == -1) // ko tim duoc tien trinh vao cTime
         {
             idleP.startTime = prevProcess.endTime;
             for (int ii = 0; ii < n; ii++)
@@ -156,7 +156,7 @@ List RR(Process *processes, int n, int qq)
     {
         for (int i = 0; i < n; i++)
         {
-            if (processes[i].arrivalTime <= cTime + qq && //tim tien trinh trong qq tiep
+            if (processes[i].arrivalTime < cTime + qq && //tim tien trinh trong qq tiep
                 queuePushed[i] == 0)
             {
                 queuePush(&waitingIndexQueue, i);
@@ -187,7 +187,7 @@ List RR(Process *processes, int n, int qq)
             if (processes[i].remainingTime > qq)
             {
                 processes[i].remainingTime -= qq;
-                queuePush(&waitingIndexQueue, i);
+                queuePush(&waitingIndexQueue, i); //push lai vao cuoi queue
                 processes[i].endTime = prevProcess.endTime + qq;
                 listAdd(&gantt, processes[i]);
             }
@@ -202,7 +202,7 @@ List RR(Process *processes, int n, int qq)
             }
             prevProcess = processes[i];
         }
-        cTime = prevProcess.endTime;
+        cTime = prevProcess.endTime; // cap nhat thoi gian
     }
     return gantt;
 }

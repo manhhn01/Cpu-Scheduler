@@ -51,7 +51,7 @@ int findMinBurst(Process *processes, int n, int cTime)
 //     return min_i;
 // }
 
-void initRemainingTime(Process *processes, int n)
+void initRemainingTime(Process *processes, int n) //khoi tao remainingTime = burstTime
 {
     for (int i = 0; i < n; i++)
         processes[i].remainingTime = processes[i].burstTime;
