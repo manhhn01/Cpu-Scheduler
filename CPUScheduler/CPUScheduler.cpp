@@ -31,9 +31,10 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include <CommCtrl.h>
 #include <wchar.h>
 #include "resource.h"
-#include "CPUScheduler.h"
+#include "CPUScheduler2.h"
 
-/* -----------------------Global variable------------------------------ */
+using namespace std;
+
 HWND g_hwndField1,
 g_hwndField2,
 g_hwndField3,
@@ -59,10 +60,11 @@ g_hwndBigGanttButton;
 
 HINSTANCE g_hInst;
 Process processes[20];
-int g_cProcess = 0,
+
+int g_cProcess = 0, //countProcess
 g_algorithm = -1; //0: fcfs 1:sjf 2:srtf 3:rr
-List g_gantt = NULL;
-/* ----------------------End Global variable------------------------------- */
+
+vector<Process> g_gantt;
 
 LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK DialogProc(HWND, UINT, WPARAM, LPARAM);
@@ -139,7 +141,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	HFONT hFont, hButtonFont, hGroupFont;
-	static HDC hdcStatic;
+	//static HDC hdcStatic;
 	static HBRUSH hbrBkgnd;
 	RECT pos;
 	switch (uMsg)
@@ -433,7 +435,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			g_cProcess = 0;
 			SetWindowTextW(g_hwndField5, L"...");
 			SetWindowTextW(g_hwndField6, L"...");
-			g_gantt = NULL;
+			g_gantt.clear();
 			InvalidateRect(hwnd, NULL, TRUE);
 		}
 		break;
@@ -511,8 +513,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CTLCOLORSTATIC:
 	{
-		hdcStatic = (HDC)wParam;
-		SetBkColor(hdcStatic, RGB(255, 255, 255));
+		//hdcStatic = (HDC)wParam;
+		//SetBkColor(hdcStatic, RGB(255, 255, 255));
 		if (hbrBkgnd == NULL)
 		{
 			hbrBkgnd = CreateSolidBrush(RGB(255, 255, 255));
@@ -527,22 +529,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hwnd, &ps);
 
-		if (g_gantt != NULL)
+		if (!g_gantt.empty())
 		{
 			TCHAR temp[10];
 			HFONT hFont = CreateFont(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Tahoma");
-			int tBurstTime = listGetLast(g_gantt).endTime;
+			int tBurstTime = g_gantt.back().endTime; //Total Burst Time
 			int pos_x1, pos_x2;
 			RECT textArea;
 			Process tempProcess;
-			HGDIOBJ original = SelectObject(hdc, GetStockObject(DC_PEN));
-
+			//HGDIOBJ original = SelectObject(hdc, GetStockObject(DC_PEN));
+			SelectObject(hdc, GetStockObject(DC_PEN));
 			SelectObject(hdc, hFont);
 			SetDCPenColor(hdc, RGB(150, 150, 150));
 			Rectangle(hdc, GANTT_X, GANTT_Y, GANTT_X + GANTT_WIDTH, GANTT_Y + GANTT_HEIGHT);
-			for (int i = 0; i < listLength(g_gantt); i++)
+			for (int i = 0; i < g_gantt.size(); i++)
 			{
-				tempProcess = listGet(g_gantt, i);
+				tempProcess = g_gantt[i];
 				pos_x1 = GANTT_X + (float)tempProcess.startTime / tBurstTime * GANTT_WIDTH;
 				pos_x2 = GANTT_X + (float)tempProcess.endTime / tBurstTime * GANTT_WIDTH;
 				MoveToEx(hdc, pos_x1, GANTT_Y, NULL);
@@ -557,7 +559,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			_itow_s(tBurstTime, temp, 10, 10);
 			TextOut(hdc, GANTT_X + GANTT_WIDTH - 10, GANTT_Y + GANTT_HEIGHT + 5, temp, wcsnlen_s(temp, 10));
 
-			SelectObject(hdc, original);
+			//SelectObject(hdc, original);
 			DeleteObject(hFont);
 		}
 		EndPaint(hwnd, &ps);
@@ -579,22 +581,22 @@ LRESULT CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hwnd, &ps);
 
-		if (g_gantt != NULL)
+		if (!g_gantt.empty())
 		{
 			TCHAR temp[10];
 			HFONT hFont = CreateFont(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Tahoma");
-			int tBurstTime = listGetLast(g_gantt).endTime;//
+			int tBurstTime = g_gantt.back().endTime;//
 			int pos_x1, pos_x2;
 			RECT textArea;
 			Process tempProcess;
-			HGDIOBJ original = SelectObject(hdc, GetStockObject(DC_PEN));
-
+			//HGDIOBJ original = SelectObject(hdc, GetStockObject(DC_PEN));
+			SelectObject(hdc, GetStockObject(DC_PEN));
 			SelectObject(hdc, hFont);
 			SetDCPenColor(hdc, RGB(150, 150, 150));
 			Rectangle(hdc, BGANTT_X, BGANTT_Y, BGANTT_X + BGANTT_WIDTH, BGANTT_Y + BGANTT_HEIGHT);
-			for (int i = 0; i < listLength(g_gantt); i++)
+			for (int i = 0; i < g_gantt.size(); i++)
 			{
-				tempProcess = listGet(g_gantt, i);
+				tempProcess = g_gantt[i];
 				pos_x1 = BGANTT_X + (float)tempProcess.startTime / tBurstTime * BGANTT_WIDTH;
 				pos_x2 = BGANTT_X + (float)tempProcess.endTime / tBurstTime * BGANTT_WIDTH;
 				MoveToEx(hdc, pos_x1, BGANTT_Y, NULL);
@@ -609,7 +611,7 @@ LRESULT CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			_itow_s(tBurstTime, temp, 10, 10);
 			TextOut(hdc, BGANTT_X + BGANTT_WIDTH - 10, BGANTT_Y + BGANTT_HEIGHT + 5, temp, wcsnlen_s(temp, 10));
 
-			SelectObject(hdc, original);
+			//SelectObject(hdc, original);
 			DeleteObject(hFont);
 		}
 		EndPaint(hwnd, &ps);
@@ -792,7 +794,7 @@ void RegDialogClass() {
 }
 
 
-//
+//get last error message
 void getLastE()
 {
 	wchar_t buf[256];

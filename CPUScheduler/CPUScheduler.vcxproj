@@ -141,6 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CPUScheduler.h" />
+    <ClInclude Include="CPUScheduler2.h" />
     <ClInclude Include="list.h" />
     <ClInclude Include="process.h" />
     <ClInclude Include="resource.h" />
